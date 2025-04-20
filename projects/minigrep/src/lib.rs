@@ -23,27 +23,26 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn search<'a>(query: &'a str, contents: &'a str) -> Vec<&'a str> {
-    let mut results = vec![];
-    for line in contents.lines() {
-        if line.contains(query) {
-            results.push(line);
-        }
-    }
-    results
+    contents.lines()
+        .filter(
+            |line| line.contains(query)
+        )
+        .collect()
 }
 
 pub fn search_case_insensitive<'a>(query: &'a str, contents: &'a str) -> Vec<&'a str> {
-    let query = query.to_lowercase();
-    let mut results = vec![];
-    for line in contents.lines() {
-        if line.to_lowercase().contains(&query) {
-            results.push(line);
-        }
-    }
-    results
+    contents.lines()
+        .filter(
+            |line| {
+                let query = query.to_lowercase();
+                line.to_lowercase()
+                    .contains(&query)
+            }
+        )
+        .collect()
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Config {
     pub query: String,
     pub filename: String,
@@ -51,12 +50,16 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments.");
-        }
-        let query = args[1].clone();
-        let filename = args[2].clone();
+    pub fn new(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        args.next();
+        let query = match args.next() {
+            Some(v) => v,
+            None => return Err("Did not get a query string")
+        };
+        let filename = match args.next() {
+            Some(v) => v,
+            None => return Err("Did not get a file name")
+        };
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
         Ok(Config { query, filename, case_sensitive })
     }
@@ -130,6 +133,31 @@ Pick three.";
         assert_eq!(
             vec!["Pick three."],
             search_case_insensitive(query, contents)
+        );
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn コマンド引数からConfigを作成する() {
+        // 準備
+        let args: Vec<String> = vec![
+            String::from("execute.app"),
+            String::from("test_query"),
+            String::from("test_filename.txt")
+        ];
+
+        // 実行
+        let config = Config::new(args.into_iter()).unwrap_or_else(|err| {
+            panic!("Problem parsing arguments. {}", err);
+        });
+        // 評価
+        assert_eq!(
+            config,
+            Config { 
+                query: String::from("test_query"),
+                filename: String::from("test_filename.txt"),
+                case_sensitive: true
+            }
         );
     }
 }
