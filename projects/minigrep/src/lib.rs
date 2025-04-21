@@ -1,3 +1,12 @@
+//! # My Crate
+//!
+//! `my_crate` is a collection of utilities to make performing certain
+//! calculations more convenient.
+
+//! #自分のクレート
+//!
+//! `my_crate`は、ユーティリティの集まりであり、特定の計算をより便利に行うことができます。
+
 use std::env;
 use std::error::Error;
 use std::fs::File;
@@ -22,6 +31,23 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/// search
+/// 検索クエリとコンテンツを受け取り、クエリを含む行のベクタを返す
+/// # Arguments
+/// * `query` - 検索クエリ
+/// * `contents` - 検索対象のコンテンツ
+/// # Returns
+/// * `Vec<&str>` - クエリを含む行のベクタ
+/// # Examples
+/// ```
+/// use minigrep::search;
+/// let query = "duct";
+/// let contents = "Rust:\nsafe, fast, productive.\nPick three.";
+/// let result = search(query, contents);
+/// assert_eq!(result, vec!["safe, fast, productive."]);
+/// ```
+/// # Errors
+/// * `std::io::Error` - ファイルの読み込みに失敗した場合
 pub fn search<'a>(query: &'a str, contents: &'a str) -> Vec<&'a str> {
     contents.lines()
         .filter(
