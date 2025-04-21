@@ -33,6 +33,13 @@ impl Drop for CustomSmartPointer {
     }
 }
 
+use std::rc::Rc;
+
+enum List2 {
+    Cons(i32, Rc<List2>),
+    Nil
+}
+
 fn main() {
     {
         let list = Cons(1,
@@ -72,6 +79,18 @@ fn main() {
         let mut d = CustomSmartPointer { data: String::from ("other stuff")};
         println!("CustomerSmartPointers created.");
         drop(d);
+    }
+
+    {
+        let a = Rc::new(List2::Cons(5, Rc::new(List2::Cons(10, Rc::new(List2::Nil)))));
+        println!("count after creating a: {}", Rc::strong_count(&a));
+        let b = List2::Cons(3, Rc::clone(&a));
+        println!("count after creating b: {}", Rc::strong_count(&a));
+        {
+            let c = List2::Cons(4, Rc::clone(&a));
+            println!("count after creating c: {}", Rc::strong_count(&a));
+        }
+        println!("count after destroying c: {}", Rc::strong_count(&a));
     }
 
 }
